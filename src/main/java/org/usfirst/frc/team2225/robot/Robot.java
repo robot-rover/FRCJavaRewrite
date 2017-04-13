@@ -1,14 +1,18 @@
 
 package org.usfirst.frc.team2225.robot;
 
+import com.ctre.CANTalon;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import org.usfirst.frc.team2225.robot.commands.DisableDrive;
+import org.usfirst.frc.team2225.robot.commands.ArcadeDrive;
 import org.usfirst.frc.team2225.robot.subsystems.DriveTrain;
+import org.usfirst.frc.team2225.robot.subsystems.FuelAquisition;
+import org.usfirst.frc.team2225.robot.subsystems.ShooterSystem;
+import org.usfirst.frc.team2225.robot.subsystems.Winch;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -20,6 +24,9 @@ import org.usfirst.frc.team2225.robot.subsystems.DriveTrain;
 public class Robot extends IterativeRobot {
 
 	public static DriveTrain driveTrain;
+	public static FuelAquisition fuelAquisition;
+	public static ShooterSystem shooterSystem;
+	public static Winch winch;
 	public static OI oi;
 
 	Command autonomousCommand;
@@ -31,8 +38,12 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void robotInit() {
-		oi = new OI();
+
         driveTrain = new DriveTrain();
+        fuelAquisition = new FuelAquisition();
+        shooterSystem = new ShooterSystem();
+        winch = new Winch();
+        oi = new OI();
 		chooser.addDefault("Default Auto", null);
 		SmartDashboard.putData("Auto mode", chooser);
 	}
@@ -44,7 +55,7 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void disabledInit() {
-        new DisableDrive().start();
+
 	}
 
 	@Override
@@ -65,6 +76,11 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
+	    Robot.driveTrain.motors.dualConsume((CANTalon motorRef) -> {
+	    	motorRef.changeControlMode(CANTalon.TalonControlMode.Position);
+	    	motorRef.set(0);
+	    	motorRef.setPosition(0);
+		});
 		autonomousCommand = chooser.getSelected();
 
 		// schedule the autonomous command (example)
@@ -90,6 +106,11 @@ public class Robot extends IterativeRobot {
         this line or comment it out. */
 		if (autonomousCommand != null)
 			autonomousCommand.cancel();
+        Robot.driveTrain.motors.dualConsume((CANTalon motorRef) -> {
+        	motorRef.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
+        	motorRef.set(0);
+        });
+        new ArcadeDrive().start();
 	}
 
 	/**

@@ -9,16 +9,45 @@ import edu.wpi.first.wpilibj.SPI;
  * floating around.
  */
 public class RobotMap {
-    //used for inverting robot drive direction
 
     //physical measurements
+    /**
+     * Width of robot in inches
+     */
     public static double robotWidth = 22;
+
+    /**
+     * radius of drive wheels in inches
+     */
     public static double wheelRadius = 3;
 
-    //ports
+    //Closed Loop Finish Constants
+    /**
+     * speed in rpm that is considered "stopped"
+     */
+    public static int stoppedSpeed = 1;
+
+    /**
+     * distance in native encoder units that is considered "on target"
+     */
+    public static int closedLoopTolerance = 10;
+
+    // ---Start Ports ---
+
+    //CAN IDs
     public static int leftMotor = 6;
     public static int rightMotor = 5;
 
+    //SPI Port Addresses
     public static SPI.Port gyroPort = SPI.Port.kOnboardCS0;
+
+    //PWM Addresses
+    public static int ballLauncher = 3;
+    public static int ballSucker = 1;
+    public static int winch = 2;
+
+    //Relay Port Addresses
+    public static int agitator = 0;
+    public static int elevator = 1;
 
 }
