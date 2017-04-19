@@ -12,6 +12,6 @@ import org.usfirst.frc.team2225.robot.Robot;
 public class InvertRobot extends InstantCommand {
     @Override
     protected void execute() {
-        Robot.driveTrain.robotDirection = -Robot.driveTrain.robotDirection;
+        Robot.driveTrain.setRobotDirection(-Robot.driveTrain.getRobotDirection());
     }
 }

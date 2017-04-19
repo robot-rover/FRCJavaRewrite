@@ -32,6 +32,11 @@ public class RobotMap {
      */
     public static int closedLoopTolerance = 10;
 
+    //Camera Settings
+    public static int cameraX = 160;
+    public static int cameraY = 120;
+    public static int cameraFPS = 10;
+
     // ---Start Ports ---
 
     //CAN IDs

@@ -32,3 +32,6 @@ gradle-app.setting
 .idea/
 *.iws
 *.ipr
+
+# Custom Exclusions
+.extSources/

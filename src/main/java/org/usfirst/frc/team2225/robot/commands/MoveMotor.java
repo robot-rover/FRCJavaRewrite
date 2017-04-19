@@ -41,7 +41,7 @@ public class MoveMotor extends Command {
     public static double moveMotor(CANTalon motorRef, double unitsToMove){
         boolean invert = motorRef.getInverted();
         double position = motorRef.getPosition() * (invert ? -1 : 1);
-        return position + unitsToMove * Robot.driveTrain.robotDirection;
+        return position + unitsToMove * Robot.driveTrain.getRobotDirection();
     }
 
     /**

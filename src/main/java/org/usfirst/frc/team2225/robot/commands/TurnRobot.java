@@ -13,8 +13,8 @@ import org.usfirst.frc.team2225.robot.SidePair;
 public class TurnRobot extends Command {
     double degreesToRotate;
     SidePair.Side direction;
-    SidePair<CANTalon> motors;
     SidePair<Double> motorTargets;
+    SidePair<CANTalon> motors;
     public TurnRobot(double degreesToRotate, SidePair.Side direction){
         this.degreesToRotate = degreesToRotate;
         this.direction = direction;
@@ -28,6 +28,7 @@ public class TurnRobot extends Command {
 
     @Override
     protected void initialize() {
+        Robot.driveTrain.verify(CANTalon.TalonControlMode.Position);
         //arc length = radians * radius
         double radians = degreesToRotate/360*2*Math.PI;
         double distanceToMoveSide = radians* RobotMap.robotWidth;

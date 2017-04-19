@@ -5,9 +5,13 @@ import edu.wpi.first.wpilibj.ADXRS450_Gyro;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Subsystem;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import org.usfirst.frc.team2225.robot.Resetable;
 import org.usfirst.frc.team2225.robot.RobotMap;
 import org.usfirst.frc.team2225.robot.SidePair;
+import org.usfirst.frc.team2225.robot.commands.MoveMotor;
+
+import java.util.function.DoubleBinaryOperator;
 
 /**
  * The DriveTrain subsystem incorporates the sensors and actuators attached to
@@ -20,20 +24,28 @@ public class DriveTrain extends Subsystem implements Resetable{
 
     public SidePair<CANTalon> motors = new SidePair<>(new CANTalon(RobotMap.leftMotor), new CANTalon(RobotMap.rightMotor));
 
-    public int robotDirection = 1;
+    private int robotDirection = 1;
 
-    RobotDrive drive = new RobotDrive(motors.left, motors.right);
+    private CANTalon.TalonControlMode controlMode;
 
-    ADXRS450_Gyro gyro = new ADXRS450_Gyro(RobotMap.gyroPort);
+    private RobotDrive drive = new RobotDrive(motors.left, motors.right);
+
+    private ADXRS450_Gyro gyro = new ADXRS450_Gyro(RobotMap.gyroPort);
 
     public DriveTrain() {
-
+        //todo: calculate f-gain, cruise velo, and accel for motion magic
         motors.dualConsume((CANTalon motorRef) -> {
             motorRef.changeControlMode(CANTalon.TalonControlMode.Position);
             motorRef.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
             motorRef.configEncoderCodesPerRev(320);
             motorRef.setPosition(0);
             motorRef.set(0);
+            motorRef.configNominalOutputVoltage(0.2, 0.2);
+            motorRef.configPeakOutputVoltage(0.5, 0.5);
+            motorRef.setPID(0.5, 0, 5);
+            //motorRef.setF();
+            //motorRef.setMotionMagicCruiseVelocity();
+            //motorRef.setMotionMagicAcceleration();
         });
 
         motors.left.setInverted(true);
@@ -67,11 +79,20 @@ public class DriveTrain extends Subsystem implements Resetable{
 
     }
 
-    /**
-     * The log method puts interesting information to the SmartDashboard.
-     */
-    public void log() {
-        //todo: add logging info
+    public int getRobotDirection(){
+        return robotDirection;
+    }
+
+    public void setRobotDirection(int direction){
+        if(direction > 1 || direction < -1)
+            SmartDashboard.putString("RobotDirectionError", "The direction was set too " + direction);
+        robotDirection = direction;
+    }
+
+
+
+    public SidePair<Double> getPositions(){
+        return new SidePair<>(motors.left.getPosition(), motors.right.getPosition());
     }
 
     /**
@@ -83,6 +104,7 @@ public class DriveTrain extends Subsystem implements Resetable{
      *            Speed in range [-1,1]
      */
     public void tankDrive(double left, double right) {
+        verify(CANTalon.TalonControlMode.PercentVbus);
         drive.tankDrive(left, right);
     }
 
@@ -91,6 +113,7 @@ public class DriveTrain extends Subsystem implements Resetable{
      * @param joy The joystick to use to drive the robot
      */
     public void tankDrive(Joystick joy) {
+        verify(CANTalon.TalonControlMode.PercentVbus);
         tankDrive(-joy.getY(), -joy.getAxis(Joystick.AxisType.kThrottle));
     }
 
@@ -100,6 +123,7 @@ public class DriveTrain extends Subsystem implements Resetable{
      * @param sideways Turning Speed in range [-1,1]
      */
     public void arcadeDrive(double forward, double sideways){
+        verify(CANTalon.TalonControlMode.PercentVbus);
         drive.arcadeDrive(forward, sideways);
     }
 
@@ -108,6 +132,7 @@ public class DriveTrain extends Subsystem implements Resetable{
      * @param joy The joystick use to drive the robot
      */
     public void arcadeDrive(Joystick joy){
+        verify(CANTalon.TalonControlMode.PercentVbus);
         arcadeDrive(joy.getY(), joy.getX());
     }
 
@@ -116,6 +141,24 @@ public class DriveTrain extends Subsystem implements Resetable{
      */
     public double getHeading() {
         return gyro.getAngle();
+    }
+
+    public void setControlMode(CANTalon.TalonControlMode mode){
+        motors.dualConsume((CANTalon motorRef) -> {
+            motorRef.changeControlMode(mode);
+        });
+        reset();
+    }
+
+    public CANTalon.TalonControlMode getControlMode(){
+        return controlMode;
+    }
+
+    public void verify(CANTalon.TalonControlMode mode){
+        if(controlMode != mode){
+            SmartDashboard.putString("ControlModeError", "Required: " + mode + ", Current: " + controlMode);
+            setControlMode(mode);
+        }
     }
 
     /**
@@ -129,11 +172,4 @@ public class DriveTrain extends Subsystem implements Resetable{
             motorRef.set(0);
         });
     }
-
-    // Divider -------------------------------
-
-
-
-
-
 }

@@ -10,10 +10,16 @@ frc {
     robotClass = "org.usfirst.frc.team2225.robot.Robot"
 }
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     compile wpilib()
     compile talonSrx()
     compile navx()
+    compile 'com.google.code.gson:gson:2.2.4'
+
 }
 
 def robotManifest = {

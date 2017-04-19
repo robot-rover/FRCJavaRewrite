@@ -22,14 +22,15 @@ public class MoveRobot extends Command {
     }
 
     @Override
-    protected void initialize() {
-        double moveDisntance = inchesToMove/(RobotMap.wheelRadius*2*Math.PI);
-        motorTargets = new SidePair<>(MoveMotor.moveMotor(motors.left, moveDisntance), MoveMotor.moveMotor(motors.left, moveDisntance));
+    protected void execute() {
+        SidePair.dualBiConsume(motors, motorTargets, CANTalon::set);
     }
 
     @Override
-    protected void execute() {
-        SidePair.dualBiConsume(motors, motorTargets, CANTalon::set);
+    protected void initialize() {
+        Robot.driveTrain.verify(CANTalon.TalonControlMode.Position);
+        double moveDisntance = inchesToMove/(RobotMap.wheelRadius*2*Math.PI);
+        motorTargets = new SidePair<>(MoveMotor.moveMotor(motors.left, moveDisntance), MoveMotor.moveMotor(motors.left, moveDisntance));
     }
 
     @Override

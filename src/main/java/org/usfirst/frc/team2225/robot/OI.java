@@ -47,13 +47,13 @@ public class OI {
         Button yButton = new JoystickButton(stick, ButtonID.Y_BUTTON);
         Button startButton = new JoystickButton(stick, ButtonID.START);
         //todo: test pov button axis (4 or 5?)
-        Button rightPOV = null;
+        //Button rightPOV = null;
 
         //Button Bindings
         aButton.whileHeld(new IntakeFuel());
         xButton.whileHeld(new RunWinch(0.5));
         yButton.whileHeld(new RunWinch(1));
         startButton.whenPressed(new InvertRobot());
-        rightPOV.whileHeld(new UnjamSystems());
+        //rightPOV.whileHeld(new UnjamSystems());
     }
 }

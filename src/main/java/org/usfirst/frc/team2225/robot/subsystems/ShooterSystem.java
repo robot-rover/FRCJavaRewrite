@@ -18,6 +18,7 @@ public class ShooterSystem extends Subsystem implements Resetable{
     public ShooterSystem(){
         ballLauncher.changeControlMode(CANTalon.TalonControlMode.Speed);
         ballLauncher.setPID(3,0.006, 2);
+        ballLauncher.set(0);
     }
 
     @Override
