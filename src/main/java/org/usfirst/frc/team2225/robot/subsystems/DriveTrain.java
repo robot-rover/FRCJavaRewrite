@@ -6,6 +6,8 @@ import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usfirst.frc.team2225.robot.Resetable;
 import org.usfirst.frc.team2225.robot.RobotMap;
 import org.usfirst.frc.team2225.robot.SidePair;
@@ -22,6 +24,8 @@ import java.util.function.DoubleBinaryOperator;
 //todo: add better talon mode management
 public class DriveTrain extends Subsystem implements Resetable{
 
+    private static Logger log = LoggerFactory.getLogger(DriveTrain.class);
+
     public SidePair<CANTalon> motors = new SidePair<>(new CANTalon(RobotMap.leftMotor), new CANTalon(RobotMap.rightMotor));
 
     private int robotDirection = 1;
@@ -34,6 +38,7 @@ public class DriveTrain extends Subsystem implements Resetable{
 
     public DriveTrain() {
         //todo: calculate f-gain, cruise velo, and accel for motion magic
+        controlMode = CANTalon.TalonControlMode.Position;
         motors.dualConsume((CANTalon motorRef) -> {
             motorRef.changeControlMode(CANTalon.TalonControlMode.Position);
             motorRef.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
@@ -84,8 +89,10 @@ public class DriveTrain extends Subsystem implements Resetable{
     }
 
     public void setRobotDirection(int direction){
-        if(direction > 1 || direction < -1)
-            SmartDashboard.putString("RobotDirectionError", "The direction was set too " + direction);
+        if(direction > 1 || direction < -1){
+            log.warn("Attempted to set the robotDirection to {}", direction);
+            return;
+        }
         robotDirection = direction;
     }
 
@@ -156,7 +163,7 @@ public class DriveTrain extends Subsystem implements Resetable{
 
     public void verify(CANTalon.TalonControlMode mode){
         if(controlMode != mode){
-            SmartDashboard.putString("ControlModeError", "Required: " + mode + ", Current: " + controlMode);
+            log.warn("ControlMode verification failed. Req: {}, Cur: {}. Switching...", mode, controlMode, new Exception());
             setControlMode(mode);
         }
     }

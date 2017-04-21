@@ -18,7 +18,9 @@ dependencies {
     compile wpilib()
     compile talonSrx()
     compile navx()
-    compile 'com.google.code.gson:gson:2.2.4'
+    compile group: 'com.google.code.gson', name: 'gson', version:'2.2.4'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
 
 }
 

@@ -5,13 +5,17 @@ import com.ctre.CANTalon;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.livewindow.LiveWindow;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usfirst.frc.team2225.robot.commands.ArcadeDrive;
+import org.usfirst.frc.team2225.robot.commands.autonomous.CrossBaseline;
 import org.usfirst.frc.team2225.robot.subsystems.DriveTrain;
 import org.usfirst.frc.team2225.robot.subsystems.FuelAquisition;
 import org.usfirst.frc.team2225.robot.subsystems.ShooterSystem;
@@ -27,6 +31,7 @@ import org.usfirst.frc.team2225.robot.vision.VisionThread;
  */
 public class Robot extends IterativeRobot {
 
+	private static Logger log = LoggerFactory.getLogger(Robot.class);
 	public static DriveTrain driveTrain;
 	public static FuelAquisition fuelAquisition;
 	public static ShooterSystem shooterSystem;
@@ -54,7 +59,9 @@ public class Robot extends IterativeRobot {
         shooterSystem = new ShooterSystem();
         winch = new Winch();
         oi = new OI();
-		chooser.addDefault("Default Auto", null);
+		chooser.addDefault("CrossBaseline Center", new CrossBaseline.Center());
+		chooser.addObject("CrossBaseline Right", new CrossBaseline.Right());
+		chooser.addObject("CrossBaseline Left", new CrossBaseline.Left());
 		SmartDashboard.putData("Auto mode", chooser);
 		visionThread = new Thread(new VisionThread());
 		visionThread.start();
@@ -88,18 +95,14 @@ public class Robot extends IterativeRobot {
 	 */
 	@Override
 	public void autonomousInit() {
-	    Robot.driveTrain.motors.dualConsume((CANTalon motorRef) -> {
-	    	motorRef.changeControlMode(CANTalon.TalonControlMode.Position);
-			motorRef.setPosition(0);
-	    	motorRef.set(0);
-		});
+		Robot.driveTrain.setControlMode(CANTalon.TalonControlMode.Position);
 		autonomousCommand = chooser.getSelected();
 
 		// schedule the autonomous command (example)
 		if (autonomousCommand != null)
 			autonomousCommand.start();
 		else
-			SmartDashboard.putString("Error", "No Autonomous Selected");
+			log.error("No Autonomous Selected!");
 	}
 
 	/**
@@ -118,11 +121,7 @@ public class Robot extends IterativeRobot {
         this line or comment it out. */
 		if (autonomousCommand != null)
 			autonomousCommand.cancel();
-        Robot.driveTrain.motors.dualConsume((CANTalon motorRef) -> {
-        	motorRef.changeControlMode(CANTalon.TalonControlMode.PercentVbus);
-        	motorRef.setPosition(0);
-        	motorRef.set(0);
-        });
+        Robot.driveTrain.setControlMode(CANTalon.TalonControlMode.PercentVbus);
         new ArcadeDrive().start();
 	}
 

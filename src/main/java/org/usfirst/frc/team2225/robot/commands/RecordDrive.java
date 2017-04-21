@@ -4,6 +4,8 @@ import com.ctre.CANTalon;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.command.Command;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.usfirst.frc.team2225.robot.Robot;
 import org.usfirst.frc.team2225.robot.SidePair;
 
@@ -11,8 +13,6 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.attribute.PosixFileAttributes;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,33 +21,36 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 //todo: add class description
 public class RecordDrive extends Command {
+    private static Logger log = LoggerFactory.getLogger(RobotDrive.class);
     //Left:{Position, Velocity} + Right:{Position, Velocity} + {Duration}
     ArrayList<double[]> points;
-    Thread exec;
+    Thread serialize;
     AtomicBoolean isRecording;
+    String opName;
 
-    public RecordDrive() {
+    public RecordDrive(String opName) {
         points = new ArrayList<>(60);
         isRecording = new AtomicBoolean(true);
-        exec = new Thread(new RecordTask(points));
+        serialize = new Thread(new RecordTask(points));
+        this.opName = opName;
     }
 
     @Override
     protected void initialize() {
-        exec.start();
+        serialize.start();
     }
 
     @Override
     protected void end() {
         isRecording.set(false);
         try {
-            exec.join(500);
+            serialize.join(500);
         } catch (InterruptedException e) {
-            SmartDashboard.putString("DriveRecordError", "Command interrupted Somehow");
+            log.warn("Thread interrupted while waiting for record thread to finish", e);
         }
-        if(exec.isAlive())
-            exec.interrupt();
-        writeCSV("test");
+        if(serialize.isAlive())
+            serialize.interrupt();
+        writeCSV(opName);
     }
 
     @Override
@@ -58,13 +61,13 @@ public class RecordDrive extends Command {
     private void writeCSV(String filename) {
         File csvFile = new File("./data/" + filename + ".csv");
         if (csvFile.exists())
-            SmartDashboard.putString("RecordWarning", "overwriting old trajectory file");
-        try (PrintWriter writeStream = new PrintWriter(Files.newBufferedWriter(csvFile.toPath(), Charset.forName("UTF-8"), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE));) {
+            log.warn("Trajectory file \"{}\" already exists, overwriting...", csvFile.getAbsolutePath());
+        try (PrintWriter writeStream = new PrintWriter(Files.newBufferedWriter(csvFile.toPath(), Charset.forName("UTF-8"), StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE, StandardOpenOption.WRITE))) {
             for (double[] point : points) {
-                writeStream.format("%f,%f,%f,%f,%f\n");
+                writeStream.format("%f,%f,%f,%f,%f\n", point[0], point[1], point[2], point[3], point[4]);
             }
         } catch (IOException e) {
-            SmartDashboard.putString("RecordWarning", e.getMessage());
+            log.error("IO Exception writing csv file \"{}\"", csvFile.getAbsolutePath());
         }
     }
 
@@ -78,7 +81,6 @@ public class RecordDrive extends Command {
 
         @Override
         public void run() {
-            points.clear();
             motors.dualConsume((CANTalon motorRef) -> motorRef.setPosition(0));
             points.add(new double[]{0.0, 0.0, 0.0, 0.0, 1.0});
             long lastRecordInMillis = System.currentTimeMillis();
@@ -86,7 +88,8 @@ public class RecordDrive extends Command {
                 try {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {
-                    SmartDashboard.putString("DriveLoggingThread", "Thread Interrupted");
+                    log.warn("Drive logging thread interrupted", e);
+                    return;
                 }
                 int duration = (int)(System.currentTimeMillis() - lastRecordInMillis);
                 lastRecordInMillis = System.currentTimeMillis();
