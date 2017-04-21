@@ -33,7 +33,6 @@ public class RecallDrive extends Command {
     public RecallDrive(String opName) {
         requires(Robot.driveTrain);
         this.opName = opName;
-        //points = new LinkedBlockingQueue<>();
         deSerialize = new Thread(new ReadTask(opName));
     }
 
@@ -49,7 +48,6 @@ public class RecallDrive extends Command {
     }
 
     class ReadTask implements Runnable {
-        //BlockingQueue<double[]> points;
         String opName;
         public ReadTask(String opName) {
             this.opName = opName;
